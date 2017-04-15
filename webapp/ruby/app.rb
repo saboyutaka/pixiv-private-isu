@@ -2,11 +2,17 @@ require 'sinatra/base'
 require 'mysql2'
 require 'rack-flash'
 require 'shellwords'
+require 'rack-lineprof'
 
 module Isuconp
   class App < Sinatra::Base
     use Rack::Session::Memcache, autofix_keys: true, secret: ENV['ISUCONP_SESSION_SECRET'] || 'sendagaya'
     use Rack::Flash
+
+
+    # Profiler # TODO
+    use Rack::Lineprof
+
     set :public_folder, File.expand_path('../../public', __FILE__)
 
     UPLOAD_LIMIT = 10 * 1024 * 1024 # 10mb
@@ -249,7 +255,7 @@ module Isuconp
 
       post_ids = db.prepare('SELECT `id` FROM `posts` WHERE `user_id` = ?').execute(
         user[:id]
-      ).map{|post| post[:id]}
+      ).map { |post| post[:id] }
       post_count = post_ids.length
 
       commented_count = 0
@@ -345,8 +351,8 @@ module Isuconp
       post = db.prepare('SELECT * FROM `posts` WHERE `id` = ?').execute(params[:id].to_i).first
 
       if (params[:ext] == "jpg" && post[:mime] == "image/jpeg") ||
-          (params[:ext] == "png" && post[:mime] == "image/png") ||
-          (params[:ext] == "gif" && post[:mime] == "image/gif")
+        (params[:ext] == "png" && post[:mime] == "image/png") ||
+        (params[:ext] == "gif" && post[:mime] == "image/gif")
         headers['Content-Type'] = post[:mime]
         return post[:imgdata]
       end
