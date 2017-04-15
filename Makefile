@@ -1,7 +1,17 @@
 .DEFAULT_GOAL := help
 
-nginx restart: ## Restart nginx
+nginx-restart: ## Restart nginx
 	@sudo service nginx restart
+
+nginx-log: ## tail nginx access.log
+	@sudo tail -f /var/log/nginx/access.log
+
+nginx-error-log: ## tail nginx error.log
+	@sudo tail -f /var/log/nginx/error.log
+
+db-slow-query: ## tail slow query log
+	@sudo tail -f /var/log/mysql/mysql-slow.log
+
 
 .PHONY: help
 help:
