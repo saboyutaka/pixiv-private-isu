@@ -118,15 +118,11 @@ module Isuconp
             post[:id]
           ).to_a
           comments.each do |comment|
-            comment[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ? LIMIT 1').execute(
-              comment[:user_id]
-            ).first
+            comment[:user] = db.query("SELECT * FROM `users` WHERE `id` = #{comment[:user_id]} LIMIT 1").first
           end
           post[:comments] = comments.reverse
 
-          post[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ? LIMIT 1').execute(
-            post[:user_id]
-          ).first
+          post[:user] = db.query("SELECT * FROM `users` WHERE `id` = #{post[:user_id]} LIMIT 1").first
 
           posts.push(post)
         end
