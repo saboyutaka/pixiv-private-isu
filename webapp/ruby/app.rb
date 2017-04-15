@@ -3,6 +3,7 @@ require 'mysql2'
 require 'rack-flash'
 require 'shellwords'
 require 'rack-lineprof'
+require 'pry'
 
 module Isuconp
   class App < Sinatra::Base
