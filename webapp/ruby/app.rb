@@ -118,18 +118,17 @@ module Isuconp
             post[:id]
           ).to_a
           comments.each do |comment|
-            comment[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ?').execute(
+            comment[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ? LIMIT 1').execute(
               comment[:user_id]
             ).first
           end
           post[:comments] = comments.reverse
 
-          post[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ?').execute(
+          post[:user] = db.prepare('SELECT * FROM `users` WHERE `id` = ? LIMIT 1').execute(
             post[:user_id]
           ).first
 
-          posts.push(post) if post[:user][:del_flg] == 0
-          break if posts.length >= POSTS_PER_PAGE
+          posts.push(post)
         end
 
         posts
@@ -229,7 +228,12 @@ module Isuconp
     get '/' do
       me = get_session_user()
 
-      results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime` FROM `posts` ORDER BY `created_at` DESC LIMIT #{POSTS_PER_PAGE}")
+      results = db.query("SELECT `posts`.`id`, `user_id`, `body`, `posts`.`created_at`, `mime`
+                          FROM `posts`
+                          JOIN `users` ON `posts`.`user_id` = `users`.`id`
+                          WHERE `del_flg` = 0
+                          ORDER BY `created_at` DESC
+                          LIMIT #{POSTS_PER_PAGE}")
       posts = make_posts(results)
 
       erb :index, layout: :layout, locals: { posts: posts, me: me }
