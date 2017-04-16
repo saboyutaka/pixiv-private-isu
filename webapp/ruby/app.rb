@@ -4,6 +4,7 @@ require 'rack-flash'
 require 'shellwords'
 require 'rack-lineprof'
 require 'pry'
+require 'pry-doc'
 require 'openssl'
 
 module Isuconp

@@ -9,4 +9,5 @@ gem "unicorn"
 gem "mysql2"
 gem "rack-flash3"
 gem 'rack-lineprof'
-gem 'pry'
+gem 'pry-byebug'
+gem 'pry-doc'
