@@ -62,22 +62,9 @@ module Isuconp
           db.prepare(s).execute
         end
 
-        create_images
-      end
-
-      def create_images
         image_dir = '../public/image'
         FileUtils.remove_dir(image_dir) if FileTest.exist?(image_dir)
         FileUtils.mkdir_p(image_dir)
-
-        posts = db.query('SELECT * FROM posts')
-        posts.each do |post|
-          path = "../public#{image_url(post)}"
-          File.write(path, post[:imgdata])
-        end
-      end
-
-      def write_image
       end
 
       def try_login(account_name, password)
@@ -367,7 +354,29 @@ module Isuconp
         redirect '/', 302
       end
     end
-    
+
+    get '/image/:id.:ext' do
+      if params[:id].to_i == 0
+        return ""
+      end
+
+      post = db.prepare('SELECT * FROM `posts` WHERE `id` = ?').execute(params[:id].to_i).first
+
+      if (params[:ext] == "jpg" && post[:mime] == "image/jpeg") ||
+        (params[:ext] == "png" && post[:mime] == "image/png") ||
+        (params[:ext] == "gif" && post[:mime] == "image/gif")
+        headers['ContentType'] = post[:mime]
+
+        path = "../public#{image_url(post)}"
+        File.write(path, post[:imgdata])
+
+        return post[:imgdata]
+      end
+
+
+      return 404
+    end
+
     post '/comment' do
       me = get_session_user()
 
