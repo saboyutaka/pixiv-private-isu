@@ -113,8 +113,6 @@ module Isuconp
       def make_posts(results, all_comments: false)
         posts = []
         results.to_a.each do |post|
-          # post[:comment_count] = db.query("SELECT COUNT(*) AS `count` FROM `comments` WHERE `post_id` = #{post[:id]}").first[:count]
-
           query = "SELECT * FROM `comments` WHERE `post_id` = #{post[:id]} ORDER BY `created_at` DESC"
           unless all_comments
             query += ' LIMIT 3'
@@ -122,7 +120,7 @@ module Isuconp
           comments = db.query(query).to_a
           post[:comments] = comments.reverse
 
-          post[:user] = db.query("SELECT * FROM `users` WHERE `id` = #{post[:user_id]} LIMIT 1").first
+          # post[:user] = db.query("SELECT * FROM `users` WHERE `id` = #{post[:user_id]} LIMIT 1").first
 
           posts.push(post)
         end
