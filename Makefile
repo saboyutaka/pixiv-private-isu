@@ -12,6 +12,9 @@ restart: ## Restart Server
 nginx-restart: ## Restart nginx
 	@sudo service nginx restart
 
+nginx-reset-log: ## reest log and restart nginx
+	@sudo rm /var/log/nginx/access.log;sudo service nginx restart
+
 nginx-log: ## tail nginx access.log
 	@sudo tail -f /var/log/nginx/access.log
 
