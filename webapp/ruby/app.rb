@@ -57,6 +57,9 @@ module Isuconp
         sql << 'DELETE FROM comments WHERE id > 100000'
         sql << 'UPDATE users SET del_flg = 0'
         sql << 'UPDATE users SET del_flg = 1 WHERE id % 50 = 0'
+        sql << 'UPDATE posts SET del_flg = 0'
+        sql << 'UPDATE posts JOIN users ON posts.user_id = users.id SET posts.del_flg = 1 WHERE users.del_flg = 1'
+
         sql.each do |s|
           db.prepare(s).execute
         end
@@ -152,7 +155,7 @@ module Isuconp
           post = posts.find { |h| h[:id] == counts[:post_id] }
           post[:comment_count] = counts[:count]
         end
-        
+
         posts
       end
 
@@ -254,9 +257,8 @@ module Isuconp
     get '/' do
       me = get_session_user()
 
-      results = db.query("SELECT `posts`.`id`, `user_id`, `body`, `posts`.`created_at`, `mime`
+      results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime`
                           FROM `posts`
-                          JOIN `users` ON `posts`.`user_id` = `users`.`id`
                           WHERE `del_flg` = 0
                           ORDER BY `created_at` DESC
                           LIMIT #{POSTS_PER_PAGE}")
@@ -303,9 +305,8 @@ module Isuconp
 
     get '/posts' do
       max_created_at = params['max_created_at']
-      results = db.prepare("SELECT `posts`.`id`, `user_id`, `body`, `mime`, `posts`.`created_at`
+      results = db.prepare("SELECT `id`, `user_id`, `body`, `mime`, `posts`.`created_at`
                           FROM `posts`
-                          JOIN `users` ON `posts`.`user_id` = `users`.`id`
                           WHERE `del_flg` = 0
                           AND `posts`.`created_at` <= ?
                           ORDER BY `created_at` DESC
@@ -443,6 +444,7 @@ module Isuconp
 
       params['uid'].each do |id|
         db.prepare(query).execute(1, id.to_i)
+        db.query("UPDATE posts JOIN users ON posts.user_id = users.id SET posts.del_flg = 1 WHERE users.id = #{uid}")
       end
 
       redirect '/admin/banned', 302
