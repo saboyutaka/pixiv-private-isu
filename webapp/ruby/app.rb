@@ -61,6 +61,23 @@ module Isuconp
         sql.each do |s|
           db.prepare(s).execute
         end
+
+        create_images
+      end
+
+      def create_images
+        image_dir = '../public/image'
+        FileUtils.remove_dir(image_dir) if FileTest.exist?(image_dir)
+        FileUtils.mkdir_p(image_dir)
+
+        posts = db.query('SELECT * FROM posts')
+        posts.each do |post|
+          path = "../public#{image_url(post)}"
+          File.write(path, post[:imgdata])
+        end
+      end
+
+      def write_image
       end
 
       def try_login(account_name, password)
@@ -131,16 +148,20 @@ module Isuconp
       end
 
       def image_url(post)
-        ext = ""
-        if post[:mime] == "image/jpeg"
-          ext = ".jpg"
-        elsif post[:mime] == "image/png"
-          ext = ".png"
-        elsif post[:mime] == "image/gif"
-          ext = ".gif"
-        end
-
+        ext = ext_from(post[:mime])
         "/image/#{post[:id]}#{ext}"
+      end
+
+      def ext_from(mine)
+        if mine == "image/jpeg"
+          ".jpg"
+        elsif mine == "image/png"
+          ".png"
+        elsif mine == "image/gif"
+          ".gif"
+        else
+          ""
+        end
       end
     end
 
@@ -325,16 +346,20 @@ module Isuconp
           flash[:notice] = 'ファイルサイズが大きすぎます'
           redirect '/', 302
         end
-
         params['file'][:tempfile].rewind
+
         query = 'INSERT INTO `posts` (`user_id`, `mime`, `imgdata`, `body`) VALUES (?,?,?,?)'
         db.prepare(query).execute(
           me[:id],
           mime,
-          params["file"][:tempfile].read,
+          '',
           params["body"],
         )
         pid = db.last_id
+
+        ext = ext_from(mime)
+        path = "../public/image/#{pid}#{ext}"
+        File.write(path, params['file'][:tempfile].read)
 
         redirect "/posts/#{pid}", 302
       else
@@ -342,24 +367,7 @@ module Isuconp
         redirect '/', 302
       end
     end
-
-    get '/image/:id.:ext' do
-      if params[:id].to_i == 0
-        return ""
-      end
-
-      post = db.prepare('SELECT * FROM `posts` WHERE `id` = ?').execute(params[:id].to_i).first
-
-      if (params[:ext] == "jpg" && post[:mime] == "image/jpeg") ||
-        (params[:ext] == "png" && post[:mime] == "image/png") ||
-        (params[:ext] == "gif" && post[:mime] == "image/gif")
-        headers['Content-Type'] = post[:mime]
-        return post[:imgdata]
-      end
-
-      return 404
-    end
-
+    
     post '/comment' do
       me = get_session_user()
 

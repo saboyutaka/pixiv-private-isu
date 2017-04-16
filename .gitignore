@@ -13,3 +13,4 @@ vendor/
 /portal/log/*
 !/portal/log/.keep
 /portal/tmp
+webapp/public/image
