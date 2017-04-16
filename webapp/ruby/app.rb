@@ -62,9 +62,8 @@ module Isuconp
           db.prepare(s).execute
         end
 
-        image_dir = '../public/image'
-        FileUtils.remove_dir(image_dir) if FileTest.exist?(image_dir)
-        FileUtils.mkdir_p(image_dir)
+        # 追加された静的imageを削除
+        Dir.glob('../public/image/*').select { |path| path.scan(/\d+/)[0].to_i > 10000 }.each { |path| FileUtils.rm(path) }
       end
 
       def try_login(account_name, password)
@@ -354,28 +353,6 @@ module Isuconp
         flash[:notice] = '画像が必須です'
         redirect '/', 302
       end
-    end
-
-    get '/image/:id.:ext' do
-      if params[:id].to_i == 0
-        return ""
-      end
-
-      post = db.prepare('SELECT * FROM `posts` WHERE `id` = ?').execute(params[:id].to_i).first
-
-      if (params[:ext] == "jpg" && post[:mime] == "image/jpeg") ||
-        (params[:ext] == "png" && post[:mime] == "image/png") ||
-        (params[:ext] == "gif" && post[:mime] == "image/gif")
-        headers['ContentType'] = post[:mime]
-
-        path = "../public#{image_url(post)}"
-        File.write(path, post[:imgdata])
-
-        return post[:imgdata]
-      end
-
-
-      return 404
     end
 
     post '/comment' do
