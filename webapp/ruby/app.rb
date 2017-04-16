@@ -329,11 +329,10 @@ module Isuconp
           redirect '/', 302
         end
 
-        if params['file'][:tempfile].read.length > UPLOAD_LIMIT
+        if params['file'][:tempfile].size > UPLOAD_LIMIT
           flash[:notice] = 'ファイルサイズが大きすぎます'
           redirect '/', 302
         end
-        params['file'][:tempfile].rewind
 
         query = 'INSERT INTO `posts` (`user_id`, `mime`, `imgdata`, `body`) VALUES (?,?,?,?)'
         db.prepare(query).execute(
@@ -343,10 +342,10 @@ module Isuconp
           params["body"],
         )
         pid = db.last_id
-
         ext = ext_from(mime)
         path = "../public/image/#{pid}#{ext}"
-        File.write(path, params['file'][:tempfile].read)
+        FileUtils.cp(params['file'][:tempfile], path)
+        params['file'][:tempfile].close!
 
         redirect "/posts/#{pid}", 302
       else
