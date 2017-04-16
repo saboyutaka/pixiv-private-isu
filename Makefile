@@ -7,7 +7,7 @@ stop: ## Stop Server
 	@sudo systemctl stop isu-ruby
 
 restart: ## Restart Server
-	@sudo systemctl restart isu-ruby
+	@cd webapp/ruby; bundle 1> /dev/null; sudo systemctl restart isu-ruby
 
 nginx-restart: ## Restart nginx
 	@sudo service nginx restart
