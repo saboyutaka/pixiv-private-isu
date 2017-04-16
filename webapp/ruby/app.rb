@@ -133,23 +133,23 @@ module Isuconp
 
         users = db.query("SELECT * FROM `users` WHERE `id` in (#{user_ids.join(", ")})").to_a
 
-        # post_user
-        posts.each do |post|
-          post[:user] = users.find { |user| user[:id] == post[:user_id] }
-        end
-
-        # comment_users
-        posts.each do |post|
-          post[:comments].each do |comment|
-            comment[:user] = users.find { |user| user[:id] == comment[:user_id] }
-          end
-        end
 
         # comment_count
         query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
-        db.query(query).to_a.each do |counts|
-          post = posts.find { |h| h[:id] == counts[:post_id] }
-          post[:comment_count] = counts[:count]
+        counts = db.query(query).to_a
+
+
+        posts.each do |post|
+          # post_user
+          post[:user] = users.find { |user| user[:id] == post[:user_id] }
+
+          # comment_users
+          post[:comments].each do |comment|
+            comment[:user] = users.find { |user| user[:id] == comment[:user_id] }
+          end
+
+          # comment_count
+          post[:comment_count] = counts.find { |count| post[:id] == count[:post_id] }[:count]
         end
 
         posts
