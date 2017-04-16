@@ -444,7 +444,7 @@ module Isuconp
 
       params['uid'].each do |id|
         db.prepare(query).execute(1, id.to_i)
-        db.query("UPDATE posts JOIN users ON posts.user_id = users.id SET posts.del_flg = 1 WHERE users.id = #{uid}")
+        db.query("UPDATE posts SET del_flg = 1 WHERE user_id = #{uid}")
       end
 
       redirect '/admin/banned', 302
