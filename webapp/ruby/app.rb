@@ -120,8 +120,6 @@ module Isuconp
           comments = db.query(query).to_a
           post[:comments] = comments.reverse
 
-          # post[:user] = db.query("SELECT * FROM `users` WHERE `id` = #{post[:user_id]} LIMIT 1").first
-
           posts.push(post)
         end
 
