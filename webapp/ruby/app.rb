@@ -280,9 +280,13 @@ module Isuconp
 
     get '/posts' do
       max_created_at = params['max_created_at']
-      results = db.prepare('SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `created_at` <= ? ORDER BY `created_at` DESC').execute(
-        max_created_at.nil? ? nil : Time.iso8601(max_created_at).localtime
-      )
+      results = db.prepare("SELECT `posts`.`id`, `user_id`, `body`, `mime`, `posts`.`created_at`
+                          FROM `posts`
+                          JOIN `users` ON `posts`.`user_id` = `users`.`id`
+                          WHERE `del_flg` = 0
+                          AND `posts`.`created_at` <= ?
+                          ORDER BY `created_at` DESC
+                          LIMIT #{POSTS_PER_PAGE}").execute(max_created_at.nil? ? nil : Time.iso8601(max_created_at).localtime)
       posts = make_posts(results)
 
       erb :posts, layout: false, locals: { posts: posts }
