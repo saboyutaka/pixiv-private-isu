@@ -121,7 +121,7 @@ module Isuconp
           else
             "select a.*, (select count(1) from comments as b where a.post_id = b.post_id and a.created_at <= b.created_at ) as rank from comments as a where a.post_id in (#{post_ids.join(", ")}) having rank <= 3"
           end
-        comments = db.query(query)
+        comments = db.query(query).to_a
 
         # users
         post_user_ids = posts.map { |post| post[:user_id] }
