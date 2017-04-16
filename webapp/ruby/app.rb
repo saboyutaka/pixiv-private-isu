@@ -149,7 +149,8 @@ module Isuconp
           end
 
           # comment_count
-          post[:comment_count] = counts.find { |count| post[:id] == count[:post_id] }[:count]
+          c = counts.find { |count| post[:id] == count[:post_id] }
+          post[:comment_count] = c ? [:count] : 0
         end
 
         posts
