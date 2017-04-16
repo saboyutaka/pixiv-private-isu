@@ -344,7 +344,9 @@ module Isuconp
         pid = db.last_id
         ext = ext_from(mime)
         path = "../public/image/#{pid}#{ext}"
+
         FileUtils.cp(params['file'][:tempfile], path)
+        FileUtils.chmod(0644, path)
         params['file'][:tempfile].close!
 
         redirect "/posts/#{pid}", 302
