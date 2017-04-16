@@ -111,43 +111,45 @@ module Isuconp
       end
 
       def make_posts(results, all_comments: false)
-        posts = results.to_a
-        post_ids = posts.map { |h| h[:id] }
-
-        # comments
-        query =
-          if all_comments
-            "select * from comments where post_id in (#{post_ids.join(", ")})"
-          else
-            "select a.*, (select count(1) from comments as b where a.post_id = b.post_id and a.created_at <= b.created_at ) as rank from comments as a where a.post_id in (#{post_ids.join(", ")}) having rank <= 3"
+        posts = []
+        results.to_a.each do |post|
+          query = "SELECT * FROM `comments` WHERE `post_id` = #{post[:id]} ORDER BY `created_at` DESC"
+          unless all_comments
+            query += ' LIMIT 3'
           end
-        comments = db.query(query)
+          comments = db.query(query).to_a
+          post[:comments] = comments.reverse
+
+          posts.push(post)
+        end
+
+        post_ids = posts.map { |h| h[:id] }
 
         # users
         post_user_ids = posts.map { |post| post[:user_id] }
-        comment_user_ids = comments.map { |comment| comment[:user_id] }
+        comment_user_ids = posts.map { |post| post[:comments].map { |comment| comment[:user_id] } }.flatten
         user_ids = post_user_ids + comment_user_ids
         user_ids.uniq!
+
         users = db.query("SELECT * FROM `users` WHERE `id` in (#{user_ids.join(", ")})").to_a
 
-        # comment_count
-        query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
-        counts = db.query(query)
-
+        # post_user
         posts.each do |post|
-          # comments
-          post[:comments] = comments.select { |comment| comment[:post_id] == post[:id] }
-
-          # post_user
           post[:user] = users.find { |user| user[:id] == post[:user_id] }
+        end
 
-          # comment_users
+        # comment_users
+        posts.each do |post|
           post[:comments].each do |comment|
             comment[:user] = users.find { |user| user[:id] == comment[:user_id] }
           end
+        end
 
-          # counts
-          post[:comment_count] = counts.find { |c| post[:id] == c[:post_id] }
+        # comment_count
+        query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
+        db.query(query).to_a.each do |counts|
+          post = posts.find { |h| h[:id] == counts[:post_id] }
+          post[:comment_count] = counts[:count]
         end
 
         posts
