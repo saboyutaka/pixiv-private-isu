@@ -263,15 +263,15 @@ module Isuconp
     get '/' do
       me = get_session_user()
 
-      posts = dalli.get('index_posts')
-      unless posts
+      posts = []
+      unless dalli.get('index_posts')
+        puts 'LOAD'
         results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime`
                             FROM `posts`
                             WHERE `del_flg` = 0
                             ORDER BY `created_at` DESC
                             LIMIT #{POSTS_PER_PAGE}")
         posts = make_posts(results)
-        dalli.set('index_posts', posts)
       end
 
       erb :index, layout: :layout, locals: { posts: posts, me: me }
