@@ -11,3 +11,4 @@ gem "rack-flash3"
 gem 'rack-lineprof', github: 'kainosnoema/rack-lineprof'
 gem 'pry-byebug'
 gem 'pry-doc'
+gem 'dalli'
