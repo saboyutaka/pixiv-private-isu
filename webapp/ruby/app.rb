@@ -117,7 +117,6 @@ module Isuconp
 
         # comments
         comments = db.query("SELECT * FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) ORDER BY `created_at` DESC")
-        comments_by_post_id = comments.group_by { |c| c[:post_id] }
 
         # users
         post_user_ids = posts.map { |post| post[:user_id] }
@@ -133,8 +132,7 @@ module Isuconp
           post[:user] = users.find { |user| user[:id] == post[:user_id] }
 
           # commnets
-          post_comments = comments_by_post_id[post[:id]] || []
-
+          post_comments = comments.select { |c| c[:post_id] == post[:id] }
           post[:comments] = post_comments.slice(0..2).reverse
           # comments count
           post[:comment_count] = post_comments.size
