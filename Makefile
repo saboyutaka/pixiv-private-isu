@@ -6,6 +6,9 @@ start: ## Run Server
 stop: ## Stop Server
 	@sudo systemctl stop isu-ruby
 
+log: ## log Server
+	@sudo journalctl -u isu-ruby
+
 restart: ## Restart Server
 	@cd webapp/ruby; bundle 1> /dev/null; sudo systemctl restart isu-ruby
 
