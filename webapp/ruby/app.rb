@@ -112,34 +112,46 @@ module Isuconp
       end
 
       def make_posts(results, all_comments: false)
-        posts = results.to_a
-        post_ids = posts.map { |h| h[:id] }
+        posts = []
+        results.to_a.each do |post|
+          query = "SELECT * FROM `comments` WHERE `post_id` = #{post[:id]} ORDER BY `created_at` DESC"
+          unless all_comments
+            query += ' LIMIT 3'
+          end
+          comments = db.query(query).to_a
+          post[:comments] = comments.reverse
 
-        # comments
-        comments = db.query("SELECT * FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) ORDER BY `created_at` DESC")
+          posts.push(post)
+        end
+
+        post_ids = posts.map { |h| h[:id] }
 
         # users
         post_user_ids = posts.map { |post| post[:user_id] }
-        comment_user_ids = comments.map { |comment| comment[:user_id] }
+        comment_user_ids = posts.map { |post| post[:comments].map { |comment| comment[:user_id] } }.flatten
         user_ids = post_user_ids + comment_user_ids
         user_ids.uniq!
 
         users = db.query("SELECT * FROM `users` WHERE `id` in (#{user_ids.join(", ")})").to_a
 
 
+        # comment_count
+        query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
+        counts = db.query(query).to_a
+
+
         posts.each do |post|
           # post_user
           post[:user] = users.find { |user| user[:id] == post[:user_id] }
 
-          # commnets
-          post_comments = comments.select { |c| c[:post_id] == post[:id] }
-          post[:comments] = post_comments.slice(0..2).reverse
-          # comments count
-          post[:comment_count] = post_comments.size
           # comment_users
           post[:comments].each do |comment|
             comment[:user] = users.find { |user| user[:id] == comment[:user_id] }
           end
+
+          # comment_count
+          c = counts.find { |count| post[:id] == count[:post_id] }
+          post[:comment_count] = c ? [:count] : 0
         end
 
         posts
