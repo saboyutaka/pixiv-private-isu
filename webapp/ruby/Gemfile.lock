@@ -1,5 +1,5 @@
 GIT
-  remote: https://github.com/kainosnoema/rack-lineprof.git
+  remote: git://github.com/kainosnoema/rack-lineprof.git
   revision: b625eb7e64ac6e9c652c03be7fb9687400885a57
   specs:
     rack-lineprof (0.0.3)
