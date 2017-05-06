@@ -6,7 +6,6 @@ require 'rack-lineprof'
 require 'pry'
 require 'pry-doc'
 require 'openssl'
-require 'dalli'
 
 module Isuconp
   class App < Sinatra::Base
@@ -52,11 +51,6 @@ module Isuconp
         client
       end
 
-      def dalli
-        @dalli ||= Dalli::Client.new
-      end
-
-
       def db_initialize
         sql = []
         sql << 'DELETE FROM users WHERE id > 1000'
@@ -72,7 +66,6 @@ module Isuconp
         end
 
         # 追加された静的imageを削除
-        dalli.reset
         Dir.glob('../public/image/*').select { |path| path.scan(/\d+/)[0].to_i > 10000 }.each { |path| FileUtils.rm(path) }
       end
 
@@ -252,7 +245,6 @@ module Isuconp
       }
       session[:csrf_token] = SecureRandom.hex(16)
       redirect '/', 302
-      dalli.delete('index_posts')
     end
 
     get '/logout' do
@@ -263,16 +255,12 @@ module Isuconp
     get '/' do
       me = get_session_user()
 
-      posts = dalli.get('index_posts')
-      unless posts
-        results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime`
-                            FROM `posts`
-                            WHERE `del_flg` = 0
-                            ORDER BY `created_at` DESC
-                            LIMIT #{POSTS_PER_PAGE}")
-        posts = make_posts(results)
-        dalli.set('index_posts', posts)
-      end
+      results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime`
+                          FROM `posts`
+                          WHERE `del_flg` = 0
+                          ORDER BY `created_at` DESC
+                          LIMIT #{POSTS_PER_PAGE}")
+      posts = make_posts(results)
 
       erb :index, layout: :layout, locals: { posts: posts, me: me }
     end
@@ -387,7 +375,6 @@ module Isuconp
         params['file'][:tempfile].close!
 
         redirect "/posts/#{pid}", 302
-        dalli.delete('index_posts')
       else
         flash[:notice] = '画像が必須です'
         redirect '/', 302
@@ -418,7 +405,6 @@ module Isuconp
       )
 
       redirect "/posts/#{post_id}", 302
-      dalli.delete('index_posts')
     end
 
     get '/admin/banned' do
@@ -460,7 +446,6 @@ module Isuconp
       end
 
       redirect '/admin/banned', 302
-      dalli.delete('index_posts')
     end
   end
 end
