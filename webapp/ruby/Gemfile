@@ -8,6 +8,6 @@ gem "foreman"
 gem "puma"
 gem "mysql2"
 gem "rack-flash3"
-gem 'rack-lineprof', github: 'kainosnoema/rack-lineprof'
+gem 'rack-lineprof', git: 'https://github.com/kainosnoema/rack-lineprof'
 gem 'pry-byebug'
 gem 'pry-doc'
