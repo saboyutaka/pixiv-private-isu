@@ -18,9 +18,7 @@
   </form>
 </div>
 
-
-<% index_posts = dalli.get('index_posts') || erb(:posts, locals: { posts: posts }) %>
-<%= index_posts %>
+<%= erb :posts, locals: { posts: posts } %>
 
 <div id="isu-post-more">
   <button id="isu-post-more-btn">もっと見る</button>
