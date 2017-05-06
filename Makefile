@@ -9,8 +9,18 @@ stop: ## Stop Server
 log: ## log Server
 	@sudo journalctl -u isu-ruby
 
+config: ## copy configs from repository to conf
+	@sudo  cp /home/isucon/private_isu/webapp/conf/nginx/nginx.conf /etc/nginx/nginx.conf;
+	@sudo  cp /home/isucon/private_isu/webapp/conf/nginx/isucon.conf /etc/nginx/conf.d/isucon.conf;
+	@sudo  cp /home/isucon/private_isu/webapp/conf/mysql/my.cnf /etc/mysql/my.cnf;
+	@make -s nginx-restart
+	@make -s db-restart
+
 restart: ## Restart Server
 	@cd webapp/ruby; bundle 1> /dev/null; sudo systemctl restart isu-ruby
+
+db-restart: ## Restart mysql
+	@sudo service mysql restart
 
 nginx-restart: ## Restart nginx
 	@sudo service nginx restart
