@@ -47,6 +47,8 @@ myprofiler: ## Run myprofiler
 db-slow-query: ## tail slow query log
 	@sudo tail -f /var/log/mysql/mysql-slow.log
 
+alp: ## nginx analyzer
+	@sudo /home/isucon/gocode/bin/alp -f /var/log/nginx/access.log ${ARGS}
 
 .PHONY: help
 help:
