@@ -360,11 +360,10 @@ module Isuconp
           redirect '/', 302
         end
 
-        query = 'INSERT INTO `posts` (`user_id`, `mime`, `imgdata`, `body`) VALUES (?,?,?,?)'
+        query = 'INSERT INTO `posts` (`user_id`, `mime`, `body`) VALUES (?,?,?,?)'
         db.prepare(query).execute(
           me[:id],
           mime,
-          '',
           params["body"],
         )
         pid = db.last_id
