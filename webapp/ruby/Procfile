@@ -1,1 +1,1 @@
-unicorn: bundle exec puma -C config/puma.rb
+puma: bundle exec puma -C config/puma.rb

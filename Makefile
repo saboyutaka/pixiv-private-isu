@@ -10,20 +10,27 @@ log: ## log Server
 	@sudo journalctl -u isu-ruby
 
 config: ## copy configs from repository to conf
-	@sudo  cp /home/isucon/private_isu/webapp/conf/nginx/nginx.conf /etc/nginx/nginx.conf;
-	@sudo  cp /home/isucon/private_isu/webapp/conf/nginx/isucon.conf /etc/nginx/conf.d/isucon.conf;
-	@sudo  cp /home/isucon/private_isu/webapp/conf/mysql/my.cnf /etc/mysql/my.cnf;
+	@sudo cp ~/private_isu/webapp/conf/systemd/isu-ruby.service /etc/systemd/system/
+	@sudo cp ~/private_isu/webapp/conf/nginx/nginx.conf /etc/nginx/
+	@sudo cp ~/private_isu/webapp/conf/nginx/isucon.conf /etc/nginx/conf.d/
+	@sudo cp ~/private_isu/webapp/conf/mysql/my.cnf /etc/mysql/
+	@make -s restart
 	@make -s nginx-restart
 	@make -s db-restart
 
 restart: ## Restart Server
-	@cd webapp/ruby; bundle 1> /dev/null; sudo systemctl restart isu-ruby
+	@sudo systemctl daemon-reload
+	@cd webapp/ruby; bundle 1> /dev/null
+	@sudo systemctl restart isu-ruby
+	@echo 'Restart isu-ruby'
 
 db-restart: ## Restart mysql
 	@sudo service mysql restart
+	@echo 'Restart mysql'
 
 nginx-restart: ## Restart nginx
 	@sudo service nginx restart
+	@echo 'Restart nginx'
 
 nginx-reset-log: ## reest log and restart nginx
 	@sudo rm /var/log/nginx/access.log;sudo service nginx restart
