@@ -7,6 +7,7 @@ require 'pry'
 require 'pry-doc'
 require 'openssl'
 require 'tilt/erb'
+# require 'logger'
 
 module Isuconp
   class App < Sinatra::Base
@@ -23,6 +24,10 @@ module Isuconp
     POSTS_PER_PAGE = 20
 
     helpers do
+      def logger
+        @logger ||= Logger.new('tmp/sinatra.log')
+      end
+
       def config
         @config ||= {
           db: {
@@ -175,6 +180,11 @@ module Isuconp
         end
       end
     end
+
+    # before do
+    #   http_headers = request.env.select { |k, v| k.start_with?('HTTP_') }
+    #   logger.info http_headers
+    # end
 
     get '/initialize' do
       db_initialize
