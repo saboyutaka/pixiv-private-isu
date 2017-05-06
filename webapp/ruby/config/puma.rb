@@ -9,6 +9,6 @@ threads threads_count, threads_count
 # port        ENV['PORT']     || 8080
 environment ENV['RACK_ENV'] || 'development'
 
-stdout_redirect '/var/log/puma.log', '/var/log/puma.error', true
+stdout_redirect 'tmp/puma.log', 'tmp/puma.error', true
 
 preload_app!

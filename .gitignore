@@ -14,3 +14,4 @@ vendor/
 !/portal/log/.keep
 /portal/tmp
 webapp/public/image
+webapp/ruby/tmp
