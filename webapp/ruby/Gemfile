@@ -5,7 +5,7 @@ gem "sinatra"
 gem "sinatra-contrib"
 gem "memcache-client"
 gem "foreman"
-gem "unicorn"
+gem "puma"
 gem "mysql2"
 gem "rack-flash3"
 gem 'rack-lineprof', github: 'kainosnoema/rack-lineprof'

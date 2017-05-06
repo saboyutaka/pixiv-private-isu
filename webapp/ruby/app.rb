@@ -6,6 +6,7 @@ require 'rack-lineprof'
 require 'pry'
 require 'pry-doc'
 require 'openssl'
+require 'tilt/erb'
 
 module Isuconp
   class App < Sinatra::Base
