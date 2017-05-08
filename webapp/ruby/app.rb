@@ -118,7 +118,11 @@ module Isuconp
       def make_posts(results, all_comments: false)
         posts = []
         results.to_a.each do |post|
-          query = "SELECT * FROM `comments` WHERE `post_id` = #{post[:id]} ORDER BY `created_at` DESC"
+          query = "SELECT `comment`, `account_name` as `user_account_name`
+                   FROM `comments`
+                   JOIN `users` ON `comments`.`user_id` = `users`.`id`
+                   WHERE `post_id` = #{post[:id]}
+                   ORDER BY `comments`.`created_at` DESC"
           unless all_comments
             query += ' LIMIT 3'
           end
@@ -130,13 +134,6 @@ module Isuconp
 
         post_ids = posts.map { |h| h[:id] }
 
-        # users
-        post_user_ids = posts.map { |post| post[:user_id] }
-        comment_user_ids = posts.map { |post| post[:comments].map { |comment| comment[:user_id] } }.flatten
-        user_ids = post_user_ids + comment_user_ids
-        user_ids.uniq!
-
-        users = db.query("SELECT * FROM `users` WHERE `id` in (#{user_ids.join(", ")})").to_a
 
 
         # comment_count
@@ -145,17 +142,9 @@ module Isuconp
 
 
         posts.each do |post|
-          # post_user
-          post[:user] = users.find { |user| user[:id] == post[:user_id] }
-
-          # comment_users
-          post[:comments].each do |comment|
-            comment[:user] = users.find { |user| user[:id] == comment[:user_id] }
-          end
-
           # comment_count
           c = counts.find { |count| post[:id] == count[:post_id] }
-          post[:comment_count] = c ? [:count] : 0
+          post[:comment_count] = c ? c[:count] : 0
         end
 
         posts
@@ -260,10 +249,12 @@ module Isuconp
     get '/' do
       me = get_session_user()
 
-      results = db.query("SELECT `id`, `user_id`, `body`, `created_at`, `mime`
+      results = db.query("SELECT `posts`.`id`, `account_name` as `user_account_name`, `body`, `posts`.`created_at`, `mime`
                           FROM `posts`
-                          WHERE `del_flg` = 0
-                          ORDER BY `created_at` DESC
+                          JOIN `users`
+                          ON `posts`.`user_id` = `users`.`id`
+                          WHERE `posts`.`del_flg` = 0
+                          ORDER BY `posts`.`created_at` DESC
                           LIMIT #{POSTS_PER_PAGE}")
       posts = make_posts(results)
 
@@ -277,7 +268,12 @@ module Isuconp
         return 404
       end
 
-      results = db.query("SELECT `id`, `user_id`, `body`, `mime`, `created_at` FROM `posts` WHERE `user_id` = #{user[:id]} ORDER BY `created_at` DESC")
+      results = db.query("SELECT `posts`.`id`, `account_name` as `user_account_name`, `body`, `mime`, `posts`.`created_at`
+                          FROM `posts`
+                          JOIN `users`
+                          ON `posts`.`user_id` = `users`.`id`
+                          WHERE `user_id` = #{user[:id]}
+                          ORDER BY `created_at` DESC")
       posts = make_posts(results)
 
       comment_count = db.query("SELECT COUNT(*) AS count FROM `comments` WHERE `user_id` = #{user[:id]}").first[:count]
@@ -298,11 +294,13 @@ module Isuconp
     get '/posts' do
       max_created_at = params['max_created_at']
       formatted_max_created_at = max_created_at.nil? ? 'NULL' : "'#{Time.iso8601(max_created_at).localtime}'"
-      results = db.query("SELECT `id`, `user_id`, `body`, `mime`, `posts`.`created_at`
+      results = db.query("SELECT `posts`.`id`, `account_name` as `user_account_name`, `body`, `mime`, `posts`.`created_at`
                           FROM `posts`
+                          JOIN `users`
+                          ON `posts`.`user_id` = `users`.`id`
                           WHERE `del_flg` = 0
                           AND `posts`.`created_at` <= #{formatted_max_created_at}
-                          ORDER BY `created_at` DESC
+                          ORDER BY `posts`.`created_at` DESC
                           LIMIT #{POSTS_PER_PAGE}")
       posts = make_posts(results)
 
@@ -310,7 +308,12 @@ module Isuconp
     end
 
     get '/posts/:id' do
-      results = db.query("SELECT * FROM `posts` WHERE `id` = #{params[:id]}")
+      results = db.query("SELECT `posts`.`id`, `account_name` as `user_account_name`, `body`, `mime`, `posts`.`created_at`
+                          FROM `posts`
+                          JOIN `users`
+                          ON `posts`.`user_id` = `users`.`id`
+                          WHERE `posts`.`id` = #{params[:id]}
+                          LIMIT 1")
       posts = make_posts(results, all_comments: true)
 
       return 404 if posts.length == 0
