@@ -132,19 +132,19 @@ module Isuconp
           posts.push(post)
         end
 
-        post_ids = posts.map { |h| h[:id] }
+        if posts.any?
+          post_ids = posts.map { |h| h[:id] }
 
-
-
-        # comment_count
-        query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
-        counts = db.query(query).to_a
-
-
-        posts.each do |post|
           # comment_count
-          c = counts.find { |count| post[:id] == count[:post_id] }
-          post[:comment_count] = c ? c[:count] : 0
+          query = "SELECT post_id, count(1) as count FROM `comments` WHERE `post_id` in (#{post_ids.join(", ")}) group by post_id"
+          counts = db.query(query).to_a
+
+
+          posts.each do |post|
+            # comment_count
+            c = counts.find { |count| post[:id] == count[:post_id] }
+            post[:comment_count] = c ? c[:count] : 0
+          end
         end
 
         posts
@@ -298,7 +298,7 @@ module Isuconp
                           FROM `posts`
                           JOIN `users`
                           ON `posts`.`user_id` = `users`.`id`
-                          WHERE `del_flg` = 0
+                          WHERE `users`.`del_flg` = 0
                           AND `posts`.`created_at` <= #{formatted_max_created_at}
                           ORDER BY `posts`.`created_at` DESC
                           LIMIT #{POSTS_PER_PAGE}")
